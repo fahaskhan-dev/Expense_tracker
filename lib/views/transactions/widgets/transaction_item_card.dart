@@ -109,6 +109,7 @@ class TransactionItemCard extends StatelessWidget {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         transaction.title,
@@ -120,146 +121,82 @@ class TransactionItemCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Text(
-                            category.name,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Text(
-                            ' • ',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDark
-                                  ? AppColors.darkTextMuted
-                                  : AppColors.lightTextMuted,
-                            ),
-                          ),
-                          Text(
-                            dateFormatted,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDark
-                                  ? AppColors.darkTextMuted
-                                  : AppColors.lightTextMuted,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        '${category.name} • $dateFormatted',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                Row(
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          amountFormatted,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: transaction.isExpense
-                                ? AppColors.expenseRed
-                                : AppColors.incomeGreen,
-                          ),
-                        ),
-                        Builder(
-                          builder: (context) {
-                            final runningBal =
-                                provider.getRunningBalanceFor(transaction.id);
-                            if (runningBal == null) return const SizedBox.shrink();
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 3),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: (runningBal >= 0
-                                          ? AppColors.incomeGreen
-                                          : AppColors.expenseRed)
-                                      .withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  'Bal: ${provider.formatCurrency(runningBal)}',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: runningBal >= 0
-                                        ? (isDark
-                                            ? const Color(0xFF4ADE80)
-                                            : const Color(0xFF16A34A))
-                                        : (isDark
-                                            ? const Color(0xFFF87171)
-                                            : const Color(0xFFDC2626)),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 2),
-                    PopupMenuButton<String>(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 100),
-                      icon: Icon(
-                        Icons.more_vert_rounded,
-                        size: 18,
-                        color: isDark
-                            ? AppColors.darkTextMuted
-                            : AppColors.lightTextMuted,
+                    Text(
+                      amountFormatted,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: transaction.isExpense
+                            ? AppColors.expenseRed
+                            : AppColors.incomeGreen,
                       ),
-                      onSelected: (val) {
-                        if (val == 'edit') {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (ctx) =>
-                                AddEditTransactionModal(transaction: transaction),
-                          );
-                        } else if (val == 'delete') {
-                          _showDeleteConfirmation(context);
-                        }
+                    ),
+                    Builder(
+                      builder: (context) {
+                        final runningBal =
+                            provider.getRunningBalanceFor(transaction.id);
+                        if (runningBal == null) return const SizedBox.shrink();
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 3),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: (runningBal >= 0
+                                      ? AppColors.incomeGreen
+                                      : AppColors.expenseRed)
+                                  .withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'Bal: ${provider.formatCurrency(runningBal)}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: runningBal >= 0
+                                    ? (isDark
+                                        ? const Color(0xFF4ADE80)
+                                        : const Color(0xFF16A34A))
+                                    : (isDark
+                                        ? const Color(0xFFF87171)
+                                        : const Color(0xFFDC2626)),
+                              ),
+                            ),
+                          ),
+                        );
                       },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'edit',
-                          child: Row(
-                            children: [
-                              Icon(Icons.edit_outlined, size: 16),
-                              SizedBox(width: 8),
-                              Text('Edit', style: TextStyle(fontSize: 13)),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete_outline,
-                                  size: 16, color: AppColors.expenseRed),
-                              SizedBox(width: 8),
-                              Text('Delete',
-                                  style: TextStyle(
-                                      fontSize: 13,
-                                      color: AppColors.expenseRed)),
-                            ],
-                          ),
-                        ),
-                      ],
                     ),
                   ],
+                ),
+                const SizedBox(width: 6),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 13,
+                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
                 ),
               ],
             ),
@@ -282,14 +219,14 @@ class TransactionDetailsScreen extends StatelessWidget {
 
   const TransactionDetailsScreen({super.key, required this.transaction});
 
-  void _confirmDelete(BuildContext context) {
+  void _confirmDelete(BuildContext context, TransactionModel tx) {
     showDialog(
       context: context,
       builder: (dialogCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Delete Transaction?'),
         content: Text(
-          'Are you sure you want to delete "${transaction.title}"?\nThis action cannot be undone.',
+          'Are you sure you want to delete "${tx.title}"?\nThis action cannot be undone.',
         ),
         actions: [
           TextButton(
@@ -306,10 +243,10 @@ class TransactionDetailsScreen extends StatelessWidget {
             onPressed: () {
               final nav = Navigator.of(context);
               final messenger = ScaffoldMessenger.of(context);
-              final title = transaction.title;
+              final title = tx.title;
 
               Navigator.of(dialogCtx).pop();
-              context.read<ExpenseProvider>().deleteTransaction(transaction.id);
+              context.read<ExpenseProvider>().deleteTransaction(tx.id);
               nav.pop();
 
               messenger.showSnackBar(
@@ -329,12 +266,12 @@ class TransactionDetailsScreen extends StatelessWidget {
     );
   }
 
-  void _openEdit(BuildContext context) {
+  void _openEdit(BuildContext context, TransactionModel tx) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => AddEditTransactionModal(transaction: transaction),
+      builder: (ctx) => AddEditTransactionModal(transaction: tx),
     );
   }
 
@@ -344,23 +281,13 @@ class TransactionDetailsScreen extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final provider = context.watch<ExpenseProvider>();
 
-    // Get the latest version from provider in case it was just edited
+    // Safely get latest version from provider, or fall back to passed transaction
     final latest = provider.allTransactions
         .where((t) => t.id == transaction.id)
         .cast<TransactionModel?>()
         .firstOrNull;
 
-    if (latest == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final route = ModalRoute.of(context);
-        if (route != null && route.isCurrent && Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        }
-      });
-      return const Scaffold(body: SizedBox.shrink());
-    }
-
-    final tx = latest;
+    final tx = latest ?? transaction;
     final runningBal = provider.getRunningBalanceFor(tx.id);
     final category = tx.category;
     final isExpense = tx.isExpense;
@@ -404,13 +331,13 @@ class TransactionDetailsScreen extends StatelessWidget {
             tooltip: 'Edit',
             icon: const Icon(Icons.edit_rounded, size: 22),
             color: AppColors.primaryPurple,
-            onPressed: () => _openEdit(context),
+            onPressed: () => _openEdit(context, tx),
           ),
           IconButton(
             tooltip: 'Delete',
             icon: const Icon(Icons.delete_outline_rounded, size: 22),
             color: AppColors.expenseRed,
-            onPressed: () => _confirmDelete(context),
+            onPressed: () => _confirmDelete(context, tx),
           ),
           const SizedBox(width: 4),
         ],
@@ -447,13 +374,16 @@ class TransactionDetailsScreen extends StatelessWidget {
                     iconSize: 30,
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    amountFormatted,
-                    style: const TextStyle(
-                      fontSize: 38,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: -0.5,
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      amountFormatted,
+                      style: const TextStyle(
+                        fontSize: 38,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.5,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -557,7 +487,7 @@ class TransactionDetailsScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => _openEdit(context),
+                    onPressed: () => _openEdit(context, tx),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.primaryPurple,
                       side: const BorderSide(
@@ -575,7 +505,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => _confirmDelete(context),
+                    onPressed: () => _confirmDelete(context, tx),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.expenseRed,
                       foregroundColor: Colors.white,

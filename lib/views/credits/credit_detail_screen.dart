@@ -10,27 +10,35 @@ import 'record_payment_modal.dart';
 
 class CreditDetailScreen extends StatelessWidget {
   final String creditId;
+  final CreditModel? initialCredit;
 
-  const CreditDetailScreen({super.key, required this.creditId});
+  const CreditDetailScreen({
+    super.key,
+    required this.creditId,
+    this.initialCredit,
+  });
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CreditProvider>();
 
-    final credit = provider.allCredits
+    final latest = provider.allCredits
         .where((c) => c.id == creditId)
         .cast<CreditModel?>()
         .firstOrNull;
 
+    final credit = latest ?? initialCredit;
+
     if (credit == null) {
-      // Deleted elsewhere — auto-pop safely if this route is currently active
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final route = ModalRoute.of(context);
-        if (route != null && route.isCurrent && Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        }
-      });
-      return const Scaffold(body: SizedBox.shrink());
+      return Scaffold(
+        appBar: AppBar(title: const Text('Credit Details')),
+        body: const Center(
+          child: Text(
+            'Credit record not found',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+        ),
+      );
     }
 
     final summary = provider.summaryFor(credit);
