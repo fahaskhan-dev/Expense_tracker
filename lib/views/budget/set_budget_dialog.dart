@@ -31,11 +31,14 @@ class _SetBudgetDialogState extends State<SetBudgetDialog> {
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
       final value = double.tryParse(_controller.text.trim()) ?? 0.0;
-      context.read<ExpenseProvider>().setMonthlyBudget(value);
+      final expenseProvider = context.read<ExpenseProvider>();
+      final messenger = ScaffoldMessenger.of(context);
+      final currency = expenseProvider.currencySymbol;
+
+      expenseProvider.setMonthlyBudget(value);
       Navigator.of(context).pop();
 
-      final currency = context.read<ExpenseProvider>().currencySymbol;
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text('Monthly budget updated to $currency${value.toStringAsFixed(2)}'),
           backgroundColor: AppColors.primaryPurple,

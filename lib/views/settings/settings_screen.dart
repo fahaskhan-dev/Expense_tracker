@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../providers/credit_provider.dart';
 import '../../providers/expense_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../theme/app_colors.dart';
@@ -117,6 +118,12 @@ class SettingsScreen extends StatelessWidget {
     if (!context.mounted) return;
 
     if (success) {
+      try {
+        context.read<CreditProvider>().loadData();
+      } catch (_) {
+        // CreditProvider might not be mounted in isolated widget test environments
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Row(

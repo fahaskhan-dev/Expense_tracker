@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import 'analytics/analytics_screen.dart';
+import 'credits/credits_screen.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'settings/settings_screen.dart';
 import 'transactions/add_edit_transaction_modal.dart';
@@ -40,7 +41,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       DashboardScreen(onNavigateToTab: _onTabSelected),
       const AnalyticsScreen(),
       const TransactionsScreen(),
+      const CreditsScreen(),
       const SettingsScreen(),
+    ];
+
+    // Nav items definition
+    final navItems = [
+      _NavItem(index: 0, icon: Icons.dashboard_rounded, label: 'Dashboard'),
+      _NavItem(index: 1, icon: Icons.pie_chart_rounded, label: 'Analytics'),
+      _NavItem(index: 2, icon: Icons.receipt_long_rounded, label: 'History'),
+      _NavItem(index: 3, icon: Icons.handshake_outlined, label: 'Credits'),
+      _NavItem(index: 4, icon: Icons.settings_outlined, label: 'Settings'),
     ];
 
     return Scaffold(
@@ -87,35 +98,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(
-                  index: 0,
-                  icon: Icons.dashboard_rounded,
-                  label: 'Dashboard',
-                  isDark: isDark,
-                ),
-                _buildNavItem(
-                  index: 1,
-                  icon: Icons.pie_chart_rounded,
-                  label: 'Analytics',
-                  isDark: isDark,
-                ),
-                _buildNavItem(
-                  index: 2,
-                  icon: Icons.receipt_long_rounded,
-                  label: 'History',
-                  isDark: isDark,
-                ),
-                _buildNavItem(
-                  index: 3,
-                  icon: Icons.settings_outlined,
-                  label: 'Settings',
-                  isDark: isDark,
-                ),
-              ],
+              children: navItems
+                  .map(
+                    (item) => _buildNavItem(
+                      index: item.index,
+                      icon: item.icon,
+                      label: item.label,
+                      isDark: isDark,
+                    ),
+                  )
+                  .toList(),
             ),
           ),
         ),
@@ -136,37 +131,54 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primaryPurple.withValues(alpha: 0.12)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
         ),
-        child: Row(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              size: 24,
+              size: 22,
               color: isSelected
                   ? AppColors.primaryPurple
-                  : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                  : (isDark
+                      ? AppColors.darkTextMuted
+                      : AppColors.lightTextMuted),
             ),
-            if (isSelected) ...[
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryPurple,
-                ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight:
+                    isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected
+                    ? AppColors.primaryPurple
+                    : (isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted),
               ),
-            ],
+            ),
           ],
         ),
       ),
     );
   }
+}
+
+class _NavItem {
+  final int index;
+  final IconData icon;
+  final String label;
+
+  const _NavItem({
+    required this.index,
+    required this.icon,
+    required this.label,
+  });
 }

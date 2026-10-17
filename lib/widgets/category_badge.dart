@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class CategoryBadge extends StatelessWidget {
   final IconData icon;
   final Color color;
+  final Color? iconColor;
   final double size;
   final double iconSize;
 
@@ -10,6 +11,7 @@ class CategoryBadge extends StatelessWidget {
     super.key,
     required this.icon,
     required this.color,
+    this.iconColor,
     this.size = 46,
     this.iconSize = 22,
   });
@@ -30,7 +32,7 @@ class CategoryBadge extends StatelessWidget {
       child: Center(
         child: Icon(
           icon,
-          color: color,
+          color: iconColor ?? color,
           size: iconSize,
         ),
       ),

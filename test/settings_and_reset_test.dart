@@ -5,6 +5,9 @@ import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'package:expense_tracker/models/transaction_model.dart';
 import 'package:expense_tracker/services/hive_service.dart';
+import 'package:expense_tracker/models/credit_model.dart';
+import 'package:expense_tracker/models/credit_payment_model.dart';
+import 'package:expense_tracker/providers/credit_provider.dart';
 import 'package:expense_tracker/providers/expense_provider.dart';
 import 'package:expense_tracker/providers/theme_provider.dart';
 import 'package:expense_tracker/views/main_navigation_screen.dart';
@@ -19,18 +22,30 @@ void main() {
     if (!Hive.isAdapterRegistered(0)) {
       Hive.registerAdapter(TransactionAdapter());
     }
+    if (!Hive.isAdapterRegistered(1)) {
+      Hive.registerAdapter(CreditAdapter());
+    }
+    if (!Hive.isAdapterRegistered(2)) {
+      Hive.registerAdapter(CreditPaymentAdapter());
+    }
     final txBox = await Hive.openBox<TransactionModel>(HiveService.transactionsBoxName);
     final settingsBox = await Hive.openBox<dynamic>(HiveService.settingsBoxName);
+    final creditsBox = await Hive.openBox<CreditModel>(HiveService.creditsBoxName);
+    final creditPaymentsBox = await Hive.openBox<CreditPaymentModel>(HiveService.creditPaymentsBoxName);
     HiveService.initBoxesForTesting(
       transactionsBox: txBox,
       settingsBox: settingsBox,
+      creditsBox: creditsBox,
+      creditPaymentsBox: creditPaymentsBox,
     );
   });
 
   tearDown(() async {
     await Hive.close();
     if (tempDir.existsSync()) {
-      tempDir.deleteSync(recursive: true);
+      try {
+        tempDir.deleteSync(recursive: true);
+      } catch (_) {}
     }
   });
 
@@ -46,11 +61,20 @@ void main() {
       isExpense: false,
     );
     await HiveService.saveTransaction(tx);
+    final credit = CreditModel(
+      id: 'c_1',
+      personName: 'Alice',
+      originalAmount: 200.0,
+      creditType: CreditType.toReceive,
+      date: now,
+    );
+    await HiveService.saveCredit(credit);
     await HiveService.setMonthlyBudget(4000.0);
     await HiveService.setDarkMode(true);
     await HiveService.setCurrencySymbol('€');
 
     expect(HiveService.getAllTransactions().length, 1);
+    expect(HiveService.getAllCredits().length, 1);
     expect(HiveService.getMonthlyBudget(), 4000.0);
     expect(HiveService.isDarkMode(), true);
     expect(HiveService.getCurrencySymbol(), '€');
@@ -60,6 +84,7 @@ void main() {
 
     // 3. Verify financial data cleared & budget reset to initial 2500.0
     expect(HiveService.getAllTransactions(), isEmpty);
+    expect(HiveService.getAllCredits(), isEmpty);
     expect(HiveService.getMonthlyBudget(), 2500.0);
 
     // 4. Verify theme preferences and currency are preserved
@@ -108,12 +133,61 @@ void main() {
     expect(provider.hasActiveFilters, false);
   });
 
-  testWidgets('MainNavigationScreen has 4 tabs including Settings with Icons.settings_outlined', (tester) async {
+  test('ExpenseProvider computes running balances chronologically for transaction history', () async {
+    final provider = ExpenseProvider();
+    final day1 = DateTime(2026, 1, 1, 10, 0);
+    final day2 = DateTime(2026, 1, 2, 10, 0);
+    final day3 = DateTime(2026, 1, 3, 10, 0);
+
+    // Initial income of 5000
+    await provider.addTransaction(
+      TransactionModel(
+        id: 'tx_income',
+        title: 'Salary',
+        amount: 5000.0,
+        date: day1,
+        categoryId: 'salary',
+        isExpense: false,
+      ),
+    );
+
+    // Expense of 1200
+    await provider.addTransaction(
+      TransactionModel(
+        id: 'tx_groceries',
+        title: 'Groceries',
+        amount: 1200.0,
+        date: day2,
+        categoryId: 'food',
+        isExpense: true,
+      ),
+    );
+
+    // Expense of 800
+    await provider.addTransaction(
+      TransactionModel(
+        id: 'tx_shopping',
+        title: 'Clothes',
+        amount: 800.0,
+        date: day3,
+        categoryId: 'shopping',
+        isExpense: true,
+      ),
+    );
+
+    expect(provider.totalBalance, 3000.0);
+    expect(provider.getRunningBalanceFor('tx_income'), 5000.0);
+    expect(provider.getRunningBalanceFor('tx_groceries'), 3800.0);
+    expect(provider.getRunningBalanceFor('tx_shopping'), 3000.0);
+  });
+
+  testWidgets('MainNavigationScreen has 5 tabs including Credits and Settings', (tester) async {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(create: (_) => ExpenseProvider()),
+          ChangeNotifierProvider(create: (_) => CreditProvider()),
         ],
         child: const MaterialApp(
           home: MainNavigationScreen(),
@@ -123,11 +197,12 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Verify all 4 navigation items exist
+    // Verify all 5 navigation items exist
     expect(find.text('Dashboard'), findsOneWidget);
     expect(find.byIcon(Icons.dashboard_rounded), findsOneWidget);
     expect(find.byIcon(Icons.pie_chart_rounded), findsOneWidget);
     expect(find.byIcon(Icons.receipt_long_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.handshake_outlined), findsOneWidget);
     expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
 
     // Tap on Settings tab

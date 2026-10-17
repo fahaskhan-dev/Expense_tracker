@@ -97,6 +97,33 @@ class ExpenseProvider extends ChangeNotifier {
 
   double get totalBalance => totalIncome - totalExpense;
 
+  /// Map of transaction ID to the running balance right after that transaction in chronological order.
+  Map<String, double> get runningBalances {
+    final sorted = List<TransactionModel>.from(_transactions)
+      ..sort((a, b) {
+        final cmp = a.date.compareTo(b.date);
+        if (cmp != 0) return cmp;
+        return a.id.compareTo(b.id);
+      });
+
+    final Map<String, double> balances = {};
+    double running = 0.0;
+    for (final tx in sorted) {
+      if (tx.isExpense) {
+        running -= tx.amount;
+      } else {
+        running += tx.amount;
+      }
+      balances[tx.id] = running;
+    }
+    return balances;
+  }
+
+  /// Returns the stored running balance at the time of [transactionId].
+  double? getRunningBalanceFor(String transactionId) {
+    return runningBalances[transactionId];
+  }
+
   // Current Month calculations
   DateTime get _now => DateTime.now();
 
